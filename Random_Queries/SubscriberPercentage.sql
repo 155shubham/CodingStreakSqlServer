@@ -45,3 +45,52 @@ VALUES
   ,(12, 'Active')
   ;
 
+  /*
+  /* Basic check */
+
+select     c.subscriber_id
+           , DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) AS expiry_date
+           , r.recharge_date
+           , DATE(now()) AS todays_date
+from       recharge r 
+inner join customer c on r.subscriber_id = c.subscriber_id
+WHERE      DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) = DATE(now());
+
+
+/* Functional check */
+
+select      MIN(recharge_date) AS min_group_recharge_date
+            , DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) AS expiry_date
+            , COUNT(c.subscriber_id) AS noOfSubscribers
+            ,CASE 
+            WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) > DATE_ADD(DATE(NOW()), INTERVAL 1 DAY)) THEN "GreaterThanD+1"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) = DATE_ADD(DATE(NOW()), INTERVAL 1 DAY)) THEN "D+1"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) = DATE_ADD(DATE(NOW()), INTERVAL 0 DAY)) THEN "D"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) = DATE_ADD(DATE(NOW()), INTERVAL -1 DAY)) THEN "D-1"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) < DATE_ADD(DATE(NOW()), INTERVAL -1 DAY)) THEN "LessThanD-1"
+              ELSE ""
+             END AS group_custom_days
+from       recharge r 
+inner join customer c on r.subscriber_id = c.subscriber_id
+GROUP BY  expiry_date ,group_custom_days
+ORDER BY expiry_date;
+
+
+/* Query with counts of categorized subscribers */
+select      MIN(DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY)) AS min_group_expiry_date
+            ,COUNT(c.subscriber_id) AS noOfSubscribers
+            ,CASE 
+            WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) > DATE_ADD(DATE(NOW()), INTERVAL 1 DAY)) THEN "GreaterThanD+1"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) = DATE_ADD(DATE(NOW()), INTERVAL 1 DAY)) THEN "D+1"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) = DATE_ADD(DATE(NOW()), INTERVAL 0 DAY)) THEN "D"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) = DATE_ADD(DATE(NOW()), INTERVAL -1 DAY)) THEN "D-1"
+              WHEN (DATE_ADD(r.recharge_date, INTERVAL r.validity_in_days DAY) < DATE_ADD(DATE(NOW()), INTERVAL -1 DAY)) THEN "LessThanD-1"
+              ELSE ""
+             END AS group_custom_days
+from       recharge r 
+inner join customer c on r.subscriber_id = c.subscriber_id
+GROUP BY  group_custom_days
+ORDER BY min_group_expiry_date;
+  */
+
+
